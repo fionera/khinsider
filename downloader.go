@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 	"mime"
 	"os"
@@ -19,12 +18,10 @@ func crawler(c context.Context) {
 			break
 		}
 
-		println(job)
-		//if err := job.Crawl(c); err != nil {
-		//	fmt.Println(err)
-		//}
+		if err := job.Crawl(c); err != nil {
+			fmt.Println(err)
+		}
 	}
-	logrus.Println("test")
 }
 
 func followRedirect(u string) (string, error) {
