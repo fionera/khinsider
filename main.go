@@ -33,7 +33,7 @@ func main() {
 
 	c, cancel := context.WithCancel(context.Background())
 
-	jobs = make(chan Job)
+	jobs = make(chan Job, 1000000000)
 	go listenCtrlC(cancel)
 	go stats()
 
@@ -51,8 +51,8 @@ func main() {
 	}
 
 	// Shutdown
-	close(jobs)
 	crawlerGroup.Wait()
+	close(jobs)
 
 	total := atomic.LoadInt64(&totalBytes)
 	dur := time.Since(startTime).Seconds()
@@ -81,6 +81,8 @@ func stats() {
 	for range time.NewTicker(time.Second).C {
 		total := atomic.LoadInt64(&totalBytes)
 		dur := time.Since(startTime).Seconds()
+
+		logrus.Println(crawlerGroup)
 
 		logrus.WithFields(logrus.Fields{
 			"tracks":      numDownloaded,

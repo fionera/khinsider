@@ -11,7 +11,7 @@ var dir = pflag.StringP("out-dir", "o", "Downloads", "Output directory")
 var verbose = pflag.BoolP("verbose", "v", false, "More output")
 
 var availableLetters = [...]string{
-	"#",
+	//"#",
 	//"A",
 	//"B",
 	//"C",
@@ -28,7 +28,7 @@ var availableLetters = [...]string{
 	//"N",
 	//"O",
 	//"P",
-	//"Q",
+	"Q",
 	//"R",
 	//"S",
 	//"T",

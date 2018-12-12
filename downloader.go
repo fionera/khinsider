@@ -13,13 +13,17 @@ import (
 func crawler(c context.Context) {
 	defer crawlerGroup.Done()
 
-	for job := range jobs {
+	for {
 		if atomic.LoadInt32(&exitRequested) != 0 {
 			break
 		}
 
-		if err := job.Crawl(c); err != nil {
-			fmt.Println(err)
+		select {
+		case job := <-jobs:
+			if err := job.Crawl(c); err != nil {
+				fmt.Println(err)
+			}
+		default:
 		}
 	}
 }

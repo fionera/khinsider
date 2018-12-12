@@ -37,34 +37,18 @@ func (l *Letter) Crawl(c context.Context) error {
 		log.Fatal(err)
 	}
 
-	gameEntries := doc.Find("#EchoTopic > p:nth-child(5) > a")
-
-	games := make([]Game, gameEntries.Size())
-
-	// Find the review items
-	gameEntries.Each(func(i int, s *goquery.Selection) {
+	doc.Find("#EchoTopic > p:nth-child(5) > a").Each(func(i int, s *goquery.Selection) {
 		// For each item found, get the band and title
 		href, exist := s.Attr("href")
 		name := s.Text()
 
 		if exist {
-			games[i] = Game{
+			jobs <- &Game{
 				URL:  href,
 				Name: name,
 			}
 		}
 	})
 
-	l.Games = games
-
-	for _, game := range games {
-		select {
-		case <-c.Done():
-			return nil
-		case jobs <- &game:
-			continue
-		}
-	}
-
-	return nil
+	return err
 }
