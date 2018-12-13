@@ -29,7 +29,7 @@ func main() {
 	}
 
 	logrus.Info("Starting Kingdom Hearts Insider Scraper")
-	logrus.Info("  https://github.com/fionera/khinsider-scraper/")
+	logrus.Info("  https://github.com/fionera/khinsider/")
 
 	c, cancel := context.WithCancel(context.Background())
 
