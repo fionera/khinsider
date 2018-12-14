@@ -38,7 +38,7 @@ func main() {
 
 	c, cancel := context.WithCancel(context.Background())
 
-	jobs = make(chan Job, 1000000000)
+	jobs = make(chan Job, 1000000)
 	go listenCtrlC(cancel)
 	go stats()
 
