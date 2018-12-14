@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync/atomic"
+	"time"
 )
 
 func crawler(c context.Context) {
@@ -20,6 +21,7 @@ func crawler(c context.Context) {
 				fmt.Println(err)
 			}
 		default:
+			time.Sleep(100 * time.Millisecond)
 		}
 	}
 }

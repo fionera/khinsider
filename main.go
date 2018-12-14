@@ -14,6 +14,7 @@ import (
 var startTime = time.Now()
 var totalBytes int64
 var numDownloaded int64
+var numGames int64
 var crawlerGroup sync.WaitGroup
 var exitRequested int32
 var jobs chan Job
@@ -26,6 +27,10 @@ func main() {
 	if err := parseArgs(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
+	}
+
+	if !*verbose {
+		logrus.SetLevel(logrus.DebugLevel)
 	}
 
 	logrus.Info("Starting Kingdom Hearts Insider Scraper")
@@ -83,6 +88,7 @@ func stats() {
 		dur := time.Since(startTime).Seconds()
 
 		logrus.WithFields(logrus.Fields{
+			"games":       numGames,
 			"tracks":      numDownloaded,
 			"total_bytes": totalBytes,
 			"avg_rate":    fmt.Sprintf("%.0f", float64(total)/dur),

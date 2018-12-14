@@ -29,7 +29,7 @@ func (l *Letter) Crawl(c context.Context) error {
 		return err
 	}
 
-	logrus.Infof("Visited letter | %s", string(l.Letter))
+	logrus.Debugf("Visited letter | %s", string(l.Letter))
 
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(res.Body()))

@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 	"log"
+	"path/filepath"
 	"sync/atomic"
 )
 
@@ -28,7 +29,7 @@ func (t *Track) Crawl(c context.Context) error {
 		return err
 	}
 
-	logrus.Infof("Visited Song | %s - %s", t.Game.Name, t.Title)
+	logrus.Debugf("Visited Song | %s - %s", t.Game.Name, t.Title)
 
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(res.Body()))
@@ -36,9 +37,11 @@ func (t *Track) Crawl(c context.Context) error {
 		log.Fatal(err)
 	}
 
-	doc.Find("#EchoTopic > audio").Each(func(i int, s *goquery.Selection) {
+	doc.Find("#EchoTopic > p > a[href*='/ost/']").Each(func(i int, s *goquery.Selection) {
 		// For each item found, get the band and title
-		src, exist := s.Attr("src")
+		src, exist := s.Attr("href")
+
+		logrus.Debugf("Found File | %s - %s - %s", t.Game.Name, t.Title, filepath.Ext(src))
 
 		if exist {
 			size, err := download(src, *t)

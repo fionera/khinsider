@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 	"log"
+	"sync/atomic"
 )
 
 type Game struct {
@@ -26,7 +27,8 @@ func (g *Game) Crawl(c context.Context) error {
 		return err
 	}
 
-	logrus.Infof("Visited Game | %s", g.Name)
+	logrus.Debugf("Visited Game | %s", g.Name)
+	atomic.AddInt64(&numGames, 1)
 
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(res.Body()))
