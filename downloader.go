@@ -43,5 +43,10 @@ func download(u string, t Track) (int64, error) {
 		return 0, err
 	}
 
-	return res.WriteTo(f)
+	size, err := res.WriteTo(f)
+	if err != nil {
+		return 0, err
+	}
+
+	return size, f.Close()
 }
