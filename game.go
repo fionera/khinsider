@@ -10,8 +10,8 @@ import (
 )
 
 type Game struct {
-	URL  string
-	Name string
+	URL  []byte
+	Name []byte
 }
 
 func (g *Game) Crawl(c context.Context) error {
@@ -20,13 +20,13 @@ func (g *Game) Crawl(c context.Context) error {
 	res := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(res)
 
-	req.SetRequestURI("https://downloads.khinsider.com" + g.URL)
+	req.SetRequestURI("https://downloads.khinsider.com" + string(g.URL))
 
 	if err := fasthttp.Do(req, res); err != nil {
 		return err
 	}
 
-	logrus.Infof("Visited Game %s", g.Name)
+	logrus.Infof("Visited Game | %s", g.Name)
 
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(res.Body()))
@@ -42,8 +42,8 @@ func (g *Game) Crawl(c context.Context) error {
 		if exist {
 			jobs <- &Track{
 				Game:     *g,
-				Download: href,
-				Title:    name,
+				Download: []byte(href),
+				Title:    []byte(name),
 			}
 		}
 	})

@@ -29,7 +29,7 @@ func (l *Letter) Crawl(c context.Context) error {
 		return err
 	}
 
-	logrus.Infof("Visited letter %s", string(l.Letter))
+	logrus.Infof("Visited letter | %s", string(l.Letter))
 
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(res.Body()))
@@ -44,8 +44,8 @@ func (l *Letter) Crawl(c context.Context) error {
 
 		if exist {
 			jobs <- &Game{
-				URL:  href,
-				Name: name,
+				URL:  []byte(href),
+				Name: []byte(name),
 			}
 		}
 	})

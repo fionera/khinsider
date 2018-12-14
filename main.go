@@ -82,8 +82,6 @@ func stats() {
 		total := atomic.LoadInt64(&totalBytes)
 		dur := time.Since(startTime).Seconds()
 
-		logrus.Println(crawlerGroup)
-
 		logrus.WithFields(logrus.Fields{
 			"tracks":      numDownloaded,
 			"total_bytes": totalBytes,

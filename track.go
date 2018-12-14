@@ -7,30 +7,28 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 	"log"
+	"sync/atomic"
 )
 
 type Track struct {
 	Game     Game
-	Title    string
-	Download string
+	Title    []byte
+	Download []byte
 }
 
 func (t *Track) Crawl(c context.Context) error {
-
-	logrus.Println("https://downloads.khinsider.com" + t.Download)
-
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 	res := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(res)
 
-	req.SetRequestURI("https://downloads.khinsider.com" + t.Download)
+	req.SetRequestURI("https://downloads.khinsider.com" + string(t.Download))
 
 	if err := fasthttp.Do(req, res); err != nil {
 		return err
 	}
 
-	logrus.Infof("Visited Song %s", t.Title)
+	logrus.Infof("Visited Song | %s - %s", t.Game.Name, t.Title)
 
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(res.Body()))
@@ -43,12 +41,15 @@ func (t *Track) Crawl(c context.Context) error {
 		src, exist := s.Attr("src")
 
 		if exist {
-			size, err := download(src)
+			size, err := download(src, *t)
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			totalBytes += size
+			atomic.AddInt64(&totalBytes, size)
+			if size != 0 {
+				atomic.AddInt64(&numDownloaded, 1)
+			}
 		}
 	})
 

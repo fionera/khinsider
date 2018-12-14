@@ -1,53 +1,14 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
-	"mime"
 	"os"
 	"path/filepath"
-	"sync/atomic"
 )
 
-func crawler(c context.Context) {
-	defer crawlerGroup.Done()
-
-	for {
-		if atomic.LoadInt32(&exitRequested) != 0 {
-			break
-		}
-
-		select {
-		case job := <-jobs:
-			if err := job.Crawl(c); err != nil {
-				fmt.Println(err)
-			}
-		default:
-		}
-	}
-}
-
-func followRedirect(u string) (string, error) {
-	req := fasthttp.AcquireRequest()
-	defer fasthttp.ReleaseRequest(req)
-	res := fasthttp.AcquireResponse()
-	defer fasthttp.ReleaseResponse(res)
-
-	req.SetRequestURI(u)
-
-	if err := fasthttp.Do(req, res); err != nil {
-		return "", err
-	}
-
-	if sc := res.StatusCode(); sc != 302 {
-		return "", fmt.Errorf("failed to get redirected to mp3: HTTP status %d", sc)
-	}
-
-	return string(res.Header.Peek("Location")), nil
-}
-
-func download(u string) (int64, error) {
+func download(u string, t Track) (int64, error) {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 	res := fasthttp.AcquireResponse()
@@ -63,22 +24,20 @@ func download(u string) (int64, error) {
 		return 0, fmt.Errorf("HTTP status %d", sc)
 	}
 
-	cd := string(res.Header.Peek("Content-Disposition"))
-	if cd == "" {
-		return 0, fmt.Errorf("missing Content-Disposition header")
-	}
+	folder := filepath.Join(*dir, string(t.Game.Name))
 
-	_, params, err := mime.ParseMediaType(cd)
+	err := os.MkdirAll(folder, 0755)
 	if err != nil {
 		return 0, err
 	}
 
-	fileName := params["filename"]
-	if fileName == "" {
-		return 0, fmt.Errorf("missing file name in Content-Disposition header")
+	fileName := filepath.Join(folder, filepath.Base(u))
+
+	if _, err := os.Stat(fileName); !os.IsNotExist(err) {
+		logrus.Println("Skipping File " + fileName)
+		return 0, nil
 	}
 
-	fileName = filepath.Join(*dir, fileName)
 	f, err := os.OpenFile(fileName, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0666)
 	if err != nil {
 		return 0, err
