@@ -6,7 +6,6 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
-	"log"
 	"path/filepath"
 	"sync/atomic"
 )
@@ -34,7 +33,8 @@ func (t *Track) Crawl(c context.Context) error {
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(res.Body()))
 	if err != nil {
-		log.Fatal(err)
+		logrus.Error(err)
+		return err
 	}
 
 	doc.Find("#EchoTopic > p > a[href*='/ost/']").Each(func(i int, s *goquery.Selection) {
@@ -44,9 +44,10 @@ func (t *Track) Crawl(c context.Context) error {
 		logrus.Debugf("Found File | %s - %s - %s", t.Game.Name, t.Title, filepath.Ext(src))
 
 		if exist {
-			size, err := download(src, *t)
+			size, err := download(src, *t) //TODO: Retry
 			if err != nil {
-				log.Fatal(err)
+				logrus.Error(err)
+				return
 			}
 
 			atomic.AddInt64(&totalBytes, size)

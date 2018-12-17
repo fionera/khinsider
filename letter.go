@@ -7,7 +7,6 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
-	"log"
 )
 
 type Letter struct {
@@ -34,7 +33,8 @@ func (l *Letter) Crawl(c context.Context) error {
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(res.Body()))
 	if err != nil {
-		log.Fatal(err)
+		logrus.Error(err)
+		return err
 	}
 
 	doc.Find("#EchoTopic > p:nth-child(5) > a").Each(func(i int, s *goquery.Selection) {

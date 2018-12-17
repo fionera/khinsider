@@ -34,7 +34,7 @@ func download(u string, t Track) (int64, error) {
 	fileName := filepath.Join(folder, filepath.Base(u))
 
 	if _, err := os.Stat(fileName); !os.IsNotExist(err) {
-		logrus.Println("Skipping File " + fileName)
+		logrus.Infof("Skipping File " + fileName)
 		return 0, nil
 	}
 

@@ -6,7 +6,6 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
-	"log"
 	"sync/atomic"
 )
 
@@ -33,7 +32,8 @@ func (g *Game) Crawl(c context.Context) error {
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(res.Body()))
 	if err != nil {
-		log.Fatal(err)
+		logrus.Error(err)
+		return err
 	}
 
 	doc.Find("#songlist > tbody > tr > td:nth-child(3) > a").Each(func(i int, s *goquery.Selection) {
