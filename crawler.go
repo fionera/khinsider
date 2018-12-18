@@ -14,23 +14,23 @@ func crawler(c context.Context) {
 	for {
 		select {
 		case job := <-jobs:
-			err := backoff.Retry(func() error {
-				err := job.Crawl(c)
+			if atomic.LoadInt32(&exitRequested) == 0 {
+				err := backoff.Retry(func() error {
+					err := job.Crawl(c)
+					if err != nil {
+						logrus.WithError(err).
+							Errorf("Failed crawling")
+					}
+
+					return err
+				}, backoff.NewExponentialBackOff())
+
 				if err != nil {
-					logrus.WithError(err).
-						Errorf("Failed crawling")
+					logrus.Fatal(err)
 				}
-
-				if err == nil {
-					queuedJobs.Done()
-				}
-				return err
-			}, backoff.NewExponentialBackOff())
-
-			if err != nil {
-				queuedJobs.Done()
-				logrus.Fatal(err)
 			}
+
+			queuedJobs.Done()
 		default:
 			if atomic.LoadInt32(&exitRequested) != 0 {
 				break

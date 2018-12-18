@@ -62,6 +62,7 @@ func main() {
 	// Start letter grabber
 	for _, letter := range availableLetters {
 		queuedJobs.Add(1)
+
 		jobs <- &letter
 	}
 

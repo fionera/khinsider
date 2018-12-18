@@ -43,6 +43,8 @@ func (t *Track) Crawl(c context.Context) error {
 		logrus.Debugf("Found File | %s - %s - %s", t.Game.Name, t.Title, filepath.Ext(src))
 
 		if exist {
+			queuedJobs.Add(1)
+
 			jobs <- &File{
 				Track: *t,
 				URL:   []byte(src),
