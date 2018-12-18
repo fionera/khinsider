@@ -7,7 +7,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 	"path/filepath"
-	"sync/atomic"
 )
 
 type Track struct {
@@ -44,15 +43,9 @@ func (t *Track) Crawl(c context.Context) error {
 		logrus.Debugf("Found File | %s - %s - %s", t.Game.Name, t.Title, filepath.Ext(src))
 
 		if exist {
-			size, err := download(src, *t) //TODO: Retry
-			if err != nil {
-				logrus.Error(err)
-				return
-			}
-
-			atomic.AddInt64(&totalBytes, size)
-			if size != 0 {
-				atomic.AddInt64(&numDownloaded, 1)
+			jobs <- &File{
+				Track: *t,
+				URL:   []byte(src),
 			}
 		}
 	})

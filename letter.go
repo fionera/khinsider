@@ -10,7 +10,7 @@ import (
 )
 
 type Letter struct {
-	Letter []byte
+	Letter rune
 	Games  []Game
 }
 
@@ -43,6 +43,8 @@ func (l *Letter) Crawl(c context.Context) error {
 		name := s.Text()
 
 		if exist {
+			queuedJobs.Add(1)
+
 			jobs <- &Game{
 				URL:  []byte(href),
 				Name: []byte(name),

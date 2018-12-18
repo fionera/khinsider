@@ -15,12 +15,22 @@ var startTime = time.Now()
 var totalBytes int64
 var numDownloaded int64
 var numGames int64
+var queuedJobs sync.WaitGroup
 var crawlerGroup sync.WaitGroup
+var availableLetters []Letter
 var exitRequested int32
 var jobs chan Job
 
 type Job interface {
 	Crawl(c context.Context) error
+}
+
+func init() {
+	l := []Letter{{Letter: '#'}}
+	//for c := 'A'; c <= 'Z'; c++ {
+	//	l = append(l, Letter{Letter: c})
+	//}
+	availableLetters = l
 }
 
 func main() {
@@ -38,7 +48,8 @@ func main() {
 
 	c, cancel := context.WithCancel(context.Background())
 
-	jobs = make(chan Job, 1000000)
+	//Size = Albums + Songs + Letters
+	jobs = make(chan Job, 18644+523320+27)
 	go listenCtrlC(cancel)
 	go stats()
 
@@ -50,14 +61,14 @@ func main() {
 
 	// Start letter grabber
 	for _, letter := range availableLetters {
-		jobs <- &Letter{
-			Letter: []byte(letter),
-		}
+		queuedJobs.Add(1)
+		jobs <- &letter
 	}
 
 	// Shutdown
-	crawlerGroup.Wait()
+	queuedJobs.Wait()
 	close(jobs)
+	crawlerGroup.Wait()
 
 	total := atomic.LoadInt64(&totalBytes)
 	dur := time.Since(startTime).Seconds()
@@ -86,6 +97,8 @@ func stats() {
 	for range time.NewTicker(time.Second).C {
 		total := atomic.LoadInt64(&totalBytes)
 		dur := time.Since(startTime).Seconds()
+
+		logrus.Println(queuedJobs)
 
 		logrus.WithFields(logrus.Fields{
 			"games":       numGames,

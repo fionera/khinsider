@@ -42,6 +42,8 @@ func (g *Game) Crawl(c context.Context) error {
 		name := s.Text()
 
 		if exist {
+			queuedJobs.Add(1)
+
 			jobs <- &Track{
 				Game:     *g,
 				Download: []byte(href),

@@ -12,10 +12,6 @@ func crawler(c context.Context) {
 	defer crawlerGroup.Done()
 
 	for {
-		if atomic.LoadInt32(&exitRequested) != 0 {
-			break
-		}
-
 		select {
 		case job := <-jobs:
 			err := backoff.Retry(func() error {
@@ -24,13 +20,22 @@ func crawler(c context.Context) {
 					logrus.WithError(err).
 						Errorf("Failed crawling")
 				}
+
+				if err == nil {
+					queuedJobs.Done()
+				}
 				return err
 			}, backoff.NewExponentialBackOff())
 
 			if err != nil {
+				queuedJobs.Done()
 				logrus.Fatal(err)
 			}
 		default:
+			if atomic.LoadInt32(&exitRequested) != 0 {
+				break
+			}
+
 			time.Sleep(100 * time.Millisecond)
 		}
 	}

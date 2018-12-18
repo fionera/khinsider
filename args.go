@@ -10,36 +10,6 @@ var concurrency = pflag.UintP("concurrency", "c", 10, "Number of concurrent down
 var dir = pflag.StringP("out-dir", "o", "Downloads", "Output directory")
 var verbose = pflag.BoolP("verbose", "v", false, "More output")
 
-var availableLetters = [...]string{
-	"#",
-	"A",
-	"B",
-	"C",
-	"D",
-	"E",
-	"F",
-	"G",
-	"H",
-	"I",
-	"J",
-	"K",
-	"L",
-	"M",
-	"N",
-	"O",
-	"P",
-	"Q",
-	"R",
-	"S",
-	"T",
-	"U",
-	"V",
-	"W",
-	"X",
-	"Y",
-	"Z",
-}
-
 func parseArgs() error {
 	pflag.Usage = func() {
 		fmt.Fprintln(os.Stderr,
