@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sync/atomic"
@@ -42,7 +43,12 @@ func (f *File) Crawl(c context.Context) error {
 		return nil
 	}
 
-	fileName := filepath.Join(folder, filepath.Base(string(f.URL)))
+	fileName, err := url.QueryUnescape(filepath.Base(string(f.URL)))
+	if err != nil {
+		return nil
+	}
+
+	fileName = filepath.Join(folder, fileName)
 
 	if _, err := os.Stat(fileName); !os.IsNotExist(err) {
 		logrus.Infof("Skipping File " + fileName)
