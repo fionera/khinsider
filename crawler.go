@@ -5,38 +5,26 @@ import (
 	"github.com/cenkalti/backoff"
 	"github.com/sirupsen/logrus"
 	"sync/atomic"
-	"time"
 )
 
-func crawler(c context.Context) {
+func crawler(c context.Context, channel chan Job) {
 	defer crawlerGroup.Done()
 
-	for {
-		select {
-		case job := <-jobs:
-			if atomic.LoadInt32(&exitRequested) == 0 {
-				err := backoff.Retry(func() error {
-					err := job.Crawl(c)
-					if err != nil {
-						logrus.WithError(err).
-							Errorf("Failed crawling")
-					}
-
-					return err
-				}, backoff.NewExponentialBackOff())
-
+	for job := range channel {
+		if atomic.LoadInt32(&exitRequested) == 0 {
+			err := backoff.Retry(func() error {
+				err := job.Crawl(c)
 				if err != nil {
-					logrus.Fatal(err)
+					logrus.WithError(err).
+						Errorf("Failed crawling")
 				}
-			}
 
-			queuedJobs.Done()
-		default:
-			if atomic.LoadInt32(&exitRequested) != 0 {
-				break
-			}
+				return err
+			}, backoff.NewExponentialBackOff())
 
-			time.Sleep(100 * time.Millisecond)
+			if err != nil {
+				logrus.Fatal(err)
+			}
 		}
 	}
 }

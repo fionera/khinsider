@@ -10,11 +10,14 @@ import (
 )
 
 type Game struct {
-	URL  []byte
-	Name []byte
+	Letter Letter
+	URL    []byte
+	Name   []byte
 }
 
 func (g *Game) Crawl(c context.Context) error {
+	defer queuedJobs.Done()
+
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 	res := fasthttp.AcquireResponse()
@@ -44,7 +47,7 @@ func (g *Game) Crawl(c context.Context) error {
 		if exist {
 			queuedJobs.Add(1)
 
-			jobs <- &Track{
+			tracks <- &Track{
 				Game:     *g,
 				Download: []byte(href),
 				Title:    []byte(name),

@@ -17,19 +17,23 @@ var numDownloaded int64
 var numGames int64
 var queuedJobs sync.WaitGroup
 var crawlerGroup sync.WaitGroup
-var availableLetters []Letter
+var availableLetters []*Letter
 var exitRequested int32
-var jobs chan Job
+
+var tracks chan Job
+var files chan Job
+var games chan Job
+var letters chan Job
 
 type Job interface {
 	Crawl(c context.Context) error
 }
 
 func init() {
-	l := []Letter{{Letter: '#'}}
-	//for c := 'A'; c <= 'Z'; c++ {
-	//	l = append(l, Letter{Letter: c})
-	//}
+	l := []*Letter{{Letter: '#'}}
+	for c := 'A'; c <= 'Z'; c++ {
+		l = append(l, &Letter{Letter: c})
+	}
 	availableLetters = l
 }
 
@@ -48,27 +52,45 @@ func main() {
 
 	c, cancel := context.WithCancel(context.Background())
 
-	//Size = Albums + Songs + Letters
-	jobs = make(chan Job, 18644+523320+27)
 	go listenCtrlC(cancel)
 	go stats()
 
-	// Start downloaders
+	letters = make(chan Job, *concurrency)
 	crawlerGroup.Add(int(*concurrency))
 	for i := 0; i < int(*concurrency); i++ {
-		go crawler(c)
+		go crawler(c, letters)
+	}
+
+	games = make(chan Job, *concurrency)
+	crawlerGroup.Add(int(*concurrency))
+	for i := 0; i < int(*concurrency); i++ {
+		go crawler(c, games)
+	}
+
+	tracks = make(chan Job, *concurrency)
+	crawlerGroup.Add(int(*concurrency))
+	for i := 0; i < int(*concurrency); i++ {
+		go crawler(c, tracks)
+	}
+
+	files = make(chan Job, *concurrency)
+	crawlerGroup.Add(int(*concurrency))
+	for i := 0; i < int(*concurrency); i++ {
+		go crawler(c, files)
 	}
 
 	// Start letter grabber
 	for _, letter := range availableLetters {
 		queuedJobs.Add(1)
-
-		jobs <- &letter
+		letters <- letter
 	}
+	close(letters)
 
 	// Shutdown
 	queuedJobs.Wait()
-	close(jobs)
+	close(games)
+	close(tracks)
+	close(files)
 	crawlerGroup.Wait()
 
 	total := atomic.LoadInt64(&totalBytes)
@@ -98,8 +120,6 @@ func stats() {
 	for range time.NewTicker(time.Second).C {
 		total := atomic.LoadInt64(&totalBytes)
 		dur := time.Since(startTime).Seconds()
-
-		logrus.Println(queuedJobs)
 
 		logrus.WithFields(logrus.Fields{
 			"games":       numGames,

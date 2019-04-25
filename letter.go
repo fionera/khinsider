@@ -15,6 +15,8 @@ type Letter struct {
 }
 
 func (l *Letter) Crawl(c context.Context) error {
+	defer queuedJobs.Done()
+
 	u := fmt.Sprintf("https://downloads.khinsider.com/game-soundtracks/browse/%s", string(l.Letter))
 
 	req := fasthttp.AcquireRequest()
@@ -45,9 +47,10 @@ func (l *Letter) Crawl(c context.Context) error {
 		if exist {
 			queuedJobs.Add(1)
 
-			jobs <- &Game{
-				URL:  []byte(href),
-				Name: []byte(name),
+			games <- &Game{
+				Letter: *l,
+				URL:    []byte(href),
+				Name:   []byte(name),
 			}
 		}
 	})

@@ -16,15 +16,18 @@ type File struct {
 }
 
 func (f *File) Crawl(c context.Context) error {
+	defer queuedJobs.Done()
+
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 	res := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(res)
 
+	logrus.Debugf("Downloading File %s", f.Track.Title)
+
 	req.SetRequestURI(string(f.URL))
 
 	if err := fasthttp.Do(req, res); err != nil {
-
 		return nil
 	}
 
@@ -32,7 +35,7 @@ func (f *File) Crawl(c context.Context) error {
 		return fmt.Errorf("HTTP status %d", sc)
 	}
 
-	folder := filepath.Join(*dir, string(f.Track.Game.Name))
+	folder := filepath.Join(*dir, string(f.Track.Game.Letter.Letter)+"/"+string(f.Track.Game.Name))
 
 	err := os.MkdirAll(folder, 0755)
 	if err != nil {

@@ -16,6 +16,8 @@ type Track struct {
 }
 
 func (t *Track) Crawl(c context.Context) error {
+	defer queuedJobs.Done()
+
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 	res := fasthttp.AcquireResponse()
@@ -45,7 +47,7 @@ func (t *Track) Crawl(c context.Context) error {
 		if exist {
 			queuedJobs.Add(1)
 
-			jobs <- &File{
+			files <- &File{
 				Track: *t,
 				URL:   []byte(src),
 			}
